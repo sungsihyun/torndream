@@ -311,10 +311,110 @@
   .select-toolbar button.delete{
     background: var(--rose-deep); color: #fff;
   }
-  .select-toolbar .label{
-    color:#FAF3E7; font-family:var(--sans); font-size:10px;
-    font-weight:600; letter-spacing:.5px; text-transform:uppercase;
-    padding: 0 6px; opacity:.7;
+  .select-toolbar button.cut{
+    background: var(--mustard); color: #fff;
+    width: auto; padding: 0 12px; font-size: 12px;
+  }
+  .select-toolbar button.done{
+    background: var(--sage); color: #fff;
+  }
+  /* Hide Cut button when already cut out (sticker style) */
+  body.has-selection.selection-is-sticker .select-toolbar button.cut{ display:none; }
+
+  /* ===== Bottom Sheet (TEXT / TAPE / PAPER panels) ===== */
+  .sheet-backdrop{
+    position:absolute; inset:0; background:rgba(0,0,0,.35);
+    display:none; z-index:60; border-radius:36px;
+  }
+  .sheet-backdrop.show{display:block;}
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0;
+    background:var(--cream); padding:14px 16px 22px;
+    border-radius:24px 24px 0 0;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.2);
+    z-index:65;
+    transform: translateY(100%); transition: transform .3s ease;
+    max-height: 60%; overflow-y: auto;
+  }
+  .sheet.show{ transform: translateY(0); }
+  .sheet h3{
+    font-family:var(--display); font-size:18px; color:var(--sepia);
+    margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .sheet h3 .close{
+    background:none; border:none; cursor:pointer;
+    font-size:18px; color:var(--sepia); padding:0 6px;
+  }
+  .sheet .section{
+    margin-bottom: 10px;
+  }
+  .sheet .row{
+    display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;
+  }
+  .sheet input[type="text"]{
+    width:100%; padding:10px 12px; border-radius:10px;
+    border:1px solid rgba(92,72,72,.2); background:#fff;
+    font-family:var(--sans); font-size:14px; color:var(--sepia);
+    box-sizing:border-box;
+  }
+  .sheet input[type="text"]:focus{ outline:2px solid var(--rose); }
+  .sheet .swatch{
+    width:32px; height:32px; border-radius:50%;
+    border:2px solid transparent; cursor:pointer;
+    box-shadow:0 1px 3px rgba(0,0,0,.15);
+  }
+  .sheet .swatch.active{ border-color:var(--sepia); transform: scale(1.1); }
+  .sheet .font-btn{
+    padding:8px 12px; background:#fff; border:1px solid rgba(92,72,72,.15);
+    border-radius:10px; cursor:pointer; font-size:14px;
+    color:var(--sepia); transition: all .15s;
+  }
+  .sheet .font-btn.active{ background:var(--sepia); color:#fff; border-color:var(--sepia); }
+  .sheet .add-btn{
+    width:100%; padding:12px; margin-top:10px;
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+    color:#fff; border:none; border-radius:14px;
+    font-family:var(--sans); font-weight:700; font-size:14px;
+    cursor:pointer;
+  }
+  .sheet .tape-option{
+    width: 70px; height: 22px;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.25) 0 5px, transparent 5px 10px),
+      var(--tape-bg, var(--rose));
+    cursor:pointer; transition: transform .15s;
+    border-left: 1px dashed rgba(0,0,0,.1);
+    border-right: 1px dashed rgba(0,0,0,.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+  }
+  .sheet .tape-option:active{ transform: scale(.95); }
+  .sheet .paper-option{
+    width:60px; height:80px; border-radius:6px; cursor:pointer;
+    border:2px solid transparent; transition: transform .15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+  .sheet .paper-option.active{ border-color: var(--rose-deep); }
+
+  /* ===== Text & Tape cutouts ===== */
+  .cutout.text .paper{
+    background: transparent; padding: 4px 8px;
+    white-space: nowrap;
+  }
+  .cutout.text .text-content{
+    display:block; line-height:1.05;
+  }
+  .cutout.tape .paper{
+    background: transparent; padding: 0;
+    width:100%; height:100%;
+  }
+  .cutout.tape .tape-strip{
+    width:100%; height:100%;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.25) 0 5px, transparent 5px 10px),
+      var(--tape-bg, rgba(232,180,184,.7));
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    border-left: 1px dashed rgba(0,0,0,.08);
+    border-right: 1px dashed rgba(0,0,0,.08);
   }
 
   /* Drag-over visual */
@@ -337,10 +437,10 @@
          outline with noise (so the white edge looks torn from a magazine),
          fills it with white, then overlays the original (bg-removed) photo
          on top. Result: photo + white silhouette outline + torn edges. -->
-    <filter id="sticker" x="-20%" y="-20%" width="140%" height="140%">
-      <feMorphology operator="dilate" radius="6" in="SourceAlpha" result="dilated"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="3" result="noise"/>
-      <feDisplacementMap in="dilated" in2="noise" scale="5" result="torn"/>
+    <filter id="sticker" x="-15%" y="-15%" width="130%" height="130%">
+      <feMorphology operator="dilate" radius="3" in="SourceAlpha" result="dilated"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="2" seed="3" result="noise"/>
+      <feDisplacementMap in="dilated" in2="noise" scale="3" result="torn"/>
       <feFlood flood-color="#fff" result="white"/>
       <feComposite in="white" in2="torn" operator="in" result="outline"/>
       <feMerge>
@@ -348,10 +448,10 @@
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
-    <filter id="sticker-2" x="-20%" y="-20%" width="140%" height="140%">
-      <feMorphology operator="dilate" radius="7" in="SourceAlpha" result="dilated"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="11" result="noise"/>
-      <feDisplacementMap in="dilated" in2="noise" scale="6" result="torn"/>
+    <filter id="sticker-2" x="-15%" y="-15%" width="130%" height="130%">
+      <feMorphology operator="dilate" radius="3" in="SourceAlpha" result="dilated"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="2" seed="11" result="noise"/>
+      <feDisplacementMap in="dilated" in2="noise" scale="3" result="torn"/>
       <feFlood flood-color="#fff" result="white"/>
       <feComposite in="white" in2="torn" operator="in" result="outline"/>
       <feMerge>
@@ -359,10 +459,10 @@
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
-    <filter id="sticker-3" x="-20%" y="-20%" width="140%" height="140%">
-      <feMorphology operator="dilate" radius="5" in="SourceAlpha" result="dilated"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="19" result="noise"/>
-      <feDisplacementMap in="dilated" in2="noise" scale="4" result="torn"/>
+    <filter id="sticker-3" x="-15%" y="-15%" width="130%" height="130%">
+      <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="dilated"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" seed="19" result="noise"/>
+      <feDisplacementMap in="dilated" in2="noise" scale="2" result="torn"/>
       <feFlood flood-color="#fff" result="white"/>
       <feComposite in="white" in2="torn" operator="in" result="outline"/>
       <feMerge>
@@ -540,32 +640,87 @@
       <button class="pill-btn primary" onclick="alert('Exported at 1290 × 2796 — ready to set as wallpaper')">Export ↗</button>
     </div>
 
-    <!-- Selection toolbar — appears when a cutout is tapped.
-         Primary interaction is pinch-to-resize + rotate with 2 fingers.
-         Buttons are desktop fallback + delete. -->
+    <!-- Selection toolbar — appears when a cutout is tapped. -->
     <div class="select-toolbar" id="selectToolbar">
-      <span class="label">pinch to resize & rotate</span>
+      <button class="cut" id="btnRemoveBg" onclick="removeBgFromSelected()" title="Remove background">✂ Cut</button>
       <button onclick="rotateSelected(-15)" title="Rotate left">↺</button>
       <button onclick="rotateSelected(15)" title="Rotate right">↻</button>
       <button class="delete" onclick="deleteSelected()" title="Delete">✕</button>
+      <button class="done" onclick="deselectCutout()" title="Done">✓</button>
     </div>
 
     <div class="editor-toolbar">
       <button class="tool" onclick="addRandomCutout()" title="Sample cutout">
         <div class="ico">✨</div><span>Sample</span>
       </button>
-      <button class="tool" onclick="alert('Text panel (demo)')">
+      <button class="tool" onclick="openSheet('text')">
         <div class="ico">T</div><span>Text</span>
       </button>
       <button class="tool primary" onclick="openPhotoPicker()" title="Pick a photo from your library">
         <div class="ico">📷</div><span>Photo</span>
       </button>
-      <button class="tool" onclick="alert('Washi tape panel (demo)')">
+      <button class="tool" onclick="openSheet('tape')">
         <div class="ico">▰</div><span>Tape</span>
       </button>
-      <button class="tool" onclick="alert('Background paper (demo)')">
+      <button class="tool" onclick="openSheet('paper')">
         <div class="ico">❀</div><span>Paper</span>
       </button>
+    </div>
+
+    <!-- ===== Bottom sheets ===== -->
+    <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+
+    <div class="sheet" id="sheetText">
+      <h3>Add text <button class="close" onclick="closeSheet()">✕</button></h3>
+      <div class="section">
+        <input type="text" id="textInput" placeholder="Your dream, your mantra..." maxlength="40"/>
+      </div>
+      <div class="section">
+        <div style="font-size:11px; color:var(--sepia); opacity:.7; text-transform:uppercase; letter-spacing:.5px;">Font</div>
+        <div class="row" id="fontRow">
+          <button class="font-btn active" data-font="display" style="font-family:'Bodoni 72','Didot','Playfair Display',Georgia,serif; font-weight:700;">Magazine</button>
+          <button class="font-btn" data-font="serif" style="font-family:Georgia,serif; font-style:italic;">Serif</button>
+          <button class="font-btn" data-font="hand" style="font-family:'Bradley Hand','Brush Script MT',cursive;">Hand</button>
+          <button class="font-btn" data-font="bold" style="font-family:'Impact','Arial Black',sans-serif;">BOLD</button>
+        </div>
+      </div>
+      <div class="section">
+        <div style="font-size:11px; color:var(--sepia); opacity:.7; text-transform:uppercase; letter-spacing:.5px;">Color</div>
+        <div class="row" id="colorRow">
+          <button class="swatch active" data-color="#5C4848" style="background:#5C4848"></button>
+          <button class="swatch" data-color="#C97B7B" style="background:#C97B7B"></button>
+          <button class="swatch" data-color="#D4A859" style="background:#D4A859"></button>
+          <button class="swatch" data-color="#7A8C66" style="background:#7A8C66"></button>
+          <button class="swatch" data-color="#5C6B7A" style="background:#5C6B7A"></button>
+          <button class="swatch" data-color="#fff" style="background:#fff; border-color:#ccc;"></button>
+        </div>
+      </div>
+      <button class="add-btn" onclick="addTextCutout()">Add to board</button>
+    </div>
+
+    <div class="sheet" id="sheetTape">
+      <h3>Washi tape <button class="close" onclick="closeSheet()">✕</button></h3>
+      <div class="row" id="tapeRow">
+        <div class="tape-option" style="--tape-bg: rgba(232,180,184,.75)" onclick="addTapeCutout('rgba(232,180,184,.75)')"></div>
+        <div class="tape-option" style="--tape-bg: rgba(184,197,166,.75)" onclick="addTapeCutout('rgba(184,197,166,.75)')"></div>
+        <div class="tape-option" style="--tape-bg: rgba(201,214,223,.8)" onclick="addTapeCutout('rgba(201,214,223,.8)')"></div>
+        <div class="tape-option" style="--tape-bg: rgba(212,168,89,.7)" onclick="addTapeCutout('rgba(212,168,89,.7)')"></div>
+        <div class="tape-option" style="--tape-bg: rgba(250,243,231,.85)" onclick="addTapeCutout('rgba(250,243,231,.85)')"></div>
+        <div class="tape-option" style="--tape-bg: rgba(92,72,72,.7)" onclick="addTapeCutout('rgba(92,72,72,.7)')"></div>
+      </div>
+      <div style="font-size:11px; color:var(--sepia); opacity:.6; margin-top:8px;">Tap a tape to drop it on the board.</div>
+    </div>
+
+    <div class="sheet" id="sheetPaper">
+      <h3>Background paper <button class="close" onclick="closeSheet()">✕</button></h3>
+      <div class="row" id="paperRow">
+        <div class="paper-option active" data-paper="cream" onclick="setBackground('cream', this)" style="background: linear-gradient(165deg, #F8EBD3 0%, #E8CDA8 100%)"></div>
+        <div class="paper-option" data-paper="pink" onclick="setBackground('pink', this)" style="background: linear-gradient(165deg, #FFE4E6 0%, #E8B4B8 100%)"></div>
+        <div class="paper-option" data-paper="sage" onclick="setBackground('sage', this)" style="background: linear-gradient(165deg, #E8EFE0 0%, #B8C5A6 100%)"></div>
+        <div class="paper-option" data-paper="sky" onclick="setBackground('sky', this)" style="background: linear-gradient(165deg, #E8EEF2 0%, #C9D6DF 100%)"></div>
+        <div class="paper-option" data-paper="dusk" onclick="setBackground('dusk', this)" style="background: linear-gradient(165deg, #5C4848 0%, #2A1F1A 100%)"></div>
+        <div class="paper-option" data-paper="kraft" onclick="setBackground('kraft', this)" style="background: linear-gradient(165deg, #C8A878 0%, #8B6F4E 100%)"></div>
+      </div>
     </div>
 
     <!-- File picker — triggered by Photo button. Inline onchange = most reliable. -->
@@ -599,11 +754,10 @@
 </div>
 
 <div class="help">
-  Canvas is <b>9 : 19.5</b> — modern iPhone wallpaper ratio (1290 × 2796 px).<br/>
-  <b>📷 Photo</b> uploads from your library · <b>1 finger drag</b> moves · <b>2 finger pinch</b> resizes &amp; rotates simultaneously · <b>tap</b> a photo to select &amp; delete.<br/>
-  <span style="color:#9a8b7c; font-size:11px;">
-    On desktop, trackpad pinch also resizes the selected photo (Ctrl+scroll). AI background removal loads on first upload (~30s, then instant). Open in Chrome/Safari for best results.
-  </span>
+  Canvas is <b>9 : 19.5</b> — modern iPhone wallpaper ratio.<br/>
+  <b>📷 Photo</b> upload · <b>T</b> text · <b>▰</b> tape · <b>❀</b> paper · <b>✨</b> sample.<br/>
+  Drag = move · Pinch = resize &amp; rotate · Tap a photo = edit toolbar (<b>✂ Cut</b> removes the background).<br/>
+  <span style="color:#9a8b7c; font-size:11px;">AI cutout loads from CDN on first ✂ Cut (~30s, then instant). 100% in-browser, no API tokens.</span>
 </div>
 
 <script>
@@ -611,7 +765,7 @@ function setMode(mode){
   document.body.classList.toggle('editor-mode', mode === 'edit');
   document.getElementById('btnLock').classList.toggle('active', mode === 'lock');
   document.getElementById('btnEdit').classList.toggle('active', mode === 'edit');
-  if(mode === 'edit') loadBgRemoval(); // preload AI model in background
+  // AI model only loads when user explicitly taps "✂ Cut" — no wasted bandwidth.
 }
 // Default to editor mode so taps/drags work immediately
 document.addEventListener('DOMContentLoaded', () => setMode('edit'));
@@ -684,12 +838,54 @@ function selectCutout(el){
   selectedCutout = el;
   el.classList.add('selected');
   document.body.classList.add('has-selection');
+  // Hide "Cut" button if this cutout is already cut out (no .rect class
+  // means sticker style is already applied) or doesn't support cutting (text/tape).
+  const isCuttable = el.classList.contains('rect') && el.querySelector('img.photo');
+  document.body.classList.toggle('selection-is-sticker', !isCuttable);
 }
 function deselectCutout(){
   if(!selectedCutout) return;
   selectedCutout.classList.remove('selected');
   selectedCutout = null;
   document.body.classList.remove('has-selection');
+  document.body.classList.remove('selection-is-sticker');
+}
+
+// Remove background from currently selected photo cutout
+async function removeBgFromSelected(){
+  if(!selectedCutout) return;
+  const img = selectedCutout.querySelector('img.photo');
+  if(!img){ dbg('not a photo', true); return; }
+  const cutEl = selectedCutout;
+  try {
+    document.getElementById('modalTitle').textContent = 'Cutting out...';
+    document.getElementById('modalSub').textContent = bgMod ? 'AI is removing the background' : 'loading AI (first time ~30s)';
+    document.getElementById('modal').classList.add('show');
+
+    // Re-fetch the image as a blob from its data URL
+    const res = await fetch(img.src);
+    const blob = await res.blob();
+    const cleanBlob = await removeBgIfPossible(blob);
+
+    document.getElementById('modal').classList.remove('show');
+    if(!cleanBlob){
+      dbg('AI unavailable — kept original', true);
+      return;
+    }
+    const cleanUrl = await blobToDataURL(cleanBlob);
+    // Convert this cutout from rect → sticker style
+    cutEl.classList.remove('rect');
+    const paper = cutEl.querySelector('.paper');
+    paper.style.clipPath = ''; paper.style.webkitClipPath = '';  // remove torn polygon
+    img.src = cleanUrl;
+    img.style.cssText = 'filter: url(#' + randomStickerFilter() + ') contrast(1.04) saturate(.9) sepia(.06);';
+    // Update selection toolbar (Cut button should now hide)
+    document.body.classList.add('selection-is-sticker');
+    dbg('clean cutout ready ✓');
+  } catch(err){
+    document.getElementById('modal').classList.remove('show');
+    dbg('ERR cut: ' + err.message, true);
+  }
 }
 // Toolbar actions
 function rotateSelected(deg){
@@ -978,35 +1174,13 @@ async function handleFiles(files){
       const file = files[i];
       dbg('reading ' + (i+1) + '/' + files.length + ': ' + file.name);
 
-      // Show "cutting out" modal
-      document.getElementById('modalTitle').textContent = files.length > 1
-        ? 'Cutting out (' + (i+1) + '/' + files.length + ')...'
-        : 'Cutting out your photo...';
-      document.getElementById('modalSub').textContent = bgFailed
-        ? 'preparing photo...'
-        : (bgMod ? 'AI is removing the background' : 'loading AI (first time may take ~30s)');
-      document.getElementById('modal').classList.add('show');
-
-      // Try real background removal
-      let dataUrl;
-      let bgRemoved = false;
-      const cleanBlob = await removeBgIfPossible(file);
-      if(cleanBlob){
-        dataUrl = await blobToDataURL(cleanBlob);
-        bgRemoved = true;
-        dbg('clean cutout ready');
-      } else {
-        dataUrl = await readFileAsDataURL(file);
-        dbg('using original (no bg removal)');
-      }
-
-      // brief pause for visual continuity
-      await new Promise(r => setTimeout(r, 300));
-      document.getElementById('modal').classList.remove('show');
-      addUploadedCutout(dataUrl, bgRemoved);
-      await new Promise(r => setTimeout(r, 200));
+      // Just read the file as-is. No automatic bg removal — user can
+      // tap a photo and hit "Remove BG" in the select toolbar to cut it out.
+      const dataUrl = await readFileAsDataURL(file);
+      addUploadedCutout(dataUrl, false);
+      await new Promise(r => setTimeout(r, 150));
     }
-    dbg('done — tap a photo to edit');
+    dbg('done — tap a photo to edit / cut out');
   } catch(err){
     document.getElementById('modal').classList.remove('show');
     dbg('ERR handle: ' + err.message, true);
@@ -1062,6 +1236,120 @@ function addUploadedCutout(dataUrl, bgRemoved){
     dbg('ERR addCutout: ' + err.message, true);
   }
 }
+// ===== Bottom sheet panels (Text / Tape / Paper) =====
+function openSheet(name){
+  if(!document.body.classList.contains('editor-mode')) setMode('edit');
+  closeSheet();
+  document.getElementById('sheetBackdrop').classList.add('show');
+  const sheet = document.getElementById('sheet' + name.charAt(0).toUpperCase() + name.slice(1));
+  if(sheet) sheet.classList.add('show');
+}
+function closeSheet(){
+  document.getElementById('sheetBackdrop').classList.remove('show');
+  ['sheetText','sheetTape','sheetPaper'].forEach(id => document.getElementById(id).classList.remove('show'));
+}
+
+// Text font + color pickers
+const fontMap = {
+  display: "'Bodoni 72','Didot','Playfair Display',Georgia,serif",
+  serif:   "Georgia,'Times New Roman',serif",
+  hand:    "'Bradley Hand','Brush Script MT',cursive",
+  bold:    "'Impact','Arial Black',sans-serif"
+};
+let textFont = 'display', textColor = '#5C4848';
+document.addEventListener('click', (e) => {
+  const fb = e.target.closest('#fontRow .font-btn');
+  if(fb){
+    document.querySelectorAll('#fontRow .font-btn').forEach(b => b.classList.remove('active'));
+    fb.classList.add('active');
+    textFont = fb.dataset.font;
+  }
+  const sw = e.target.closest('#colorRow .swatch');
+  if(sw){
+    document.querySelectorAll('#colorRow .swatch').forEach(b => b.classList.remove('active'));
+    sw.classList.add('active');
+    textColor = sw.dataset.color;
+  }
+});
+
+function addTextCutout(){
+  const content = (document.getElementById('textInput').value || '').trim();
+  if(!content){ dbg('type something first', true); return; }
+  const canvas = document.getElementById('canvas');
+  const fontFamily = fontMap[textFont] || fontMap.display;
+  const isHand = textFont === 'hand';
+  const isBold = textFont === 'bold' || textFont === 'display';
+  const fontSize = textFont === 'bold' ? 28 : (textFont === 'hand' ? 24 : 26);
+
+  const x = 30 + Math.floor(Math.random()*200);
+  const y = 200 + Math.floor(Math.random()*350);
+  const rot = -4 + Math.floor(Math.random()*8);
+
+  const div = document.createElement('div');
+  div.className = 'cutout text';
+  div.dataset.x = x; div.dataset.y = y; div.dataset.rot = rot; div.dataset.scale = 1;
+  div.style.cssText = 'width: auto; height: auto;';
+  applyTransform(div);
+  div.innerHTML =
+    '<div class="paper">' +
+      '<span class="text-content" style="' +
+        'font-family:' + fontFamily + ';' +
+        'font-size:' + fontSize + 'px;' +
+        'color:' + textColor + ';' +
+        'font-weight:' + (isBold ? '700' : '400') + ';' +
+        'font-style:' + (isHand ? 'italic' : 'normal') + ';' +
+      '">' + escapeHtml(content) + '</span>' +
+    '</div>';
+  canvas.appendChild(div);
+  bindCutout(div);
+  closeSheet();
+  document.getElementById('textInput').value = '';
+  dbg('text added');
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function addTapeCutout(color){
+  const canvas = document.getElementById('canvas');
+  const w = 90 + Math.floor(Math.random()*40);
+  const h = 22;
+  const x = 40 + Math.floor(Math.random()*200);
+  const y = 200 + Math.floor(Math.random()*350);
+  const rot = -25 + Math.floor(Math.random()*50);
+
+  const div = document.createElement('div');
+  div.className = 'cutout tape';
+  div.dataset.x = x; div.dataset.y = y; div.dataset.rot = rot; div.dataset.scale = 1;
+  div.style.width = w + 'px'; div.style.height = h + 'px';
+  applyTransform(div);
+  div.innerHTML = '<div class="paper"><div class="tape-strip" style="--tape-bg:' + color + ';"></div></div>';
+  canvas.appendChild(div);
+  bindCutout(div);
+  closeSheet();
+  dbg('tape added');
+}
+
+const paperPresets = {
+  cream: 'linear-gradient(165deg, #F8EBD3 0%, #EFDCB8 50%, #E8CDA8 100%)',
+  pink:  'linear-gradient(165deg, #FFE4E6 0%, #F0C4C8 50%, #E8B4B8 100%)',
+  sage:  'linear-gradient(165deg, #E8EFE0 0%, #C8D5B8 50%, #B8C5A6 100%)',
+  sky:   'linear-gradient(165deg, #E8EEF2 0%, #D6E0E8 50%, #C9D6DF 100%)',
+  dusk:  'linear-gradient(165deg, #5C4848 0%, #3D2A28 50%, #2A1F1A 100%)',
+  kraft: 'linear-gradient(165deg, #D0B68E 0%, #B8956A 50%, #8B6F4E 100%)'
+};
+function setBackground(name, el){
+  const canvas = document.getElementById('canvas');
+  if(paperPresets[name]){
+    // Keep the noise SVG overlay, swap the gradient
+    canvas.style.background =
+      "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.88   0 0 0 0 0.78   0 0 0 0 0.62   0 0 0 0.12 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\"), " + paperPresets[name];
+  }
+  document.querySelectorAll('#paperRow .paper-option').forEach(o => o.classList.remove('active'));
+  if(el) el.classList.add('active');
+  closeSheet();
+}
+
 function addRandomCutout(){
   if(!document.body.classList.contains('editor-mode')) setMode('edit');
   const canvas = document.getElementById('canvas');
