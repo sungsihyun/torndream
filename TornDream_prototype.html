@@ -280,12 +280,18 @@
   }
   .help b{color:#d9c9b8;}
 
-  /* ===== Selected cutout (dashed outline + corner badge) ===== */
-  .cutout.selected .paper{
-    outline: 2px dashed rgba(232, 180, 184, .95);
-    outline-offset: 4px;
+  /* ===== Selected cutout — pink glow that follows the actual shape =====
+     Stacked drop-shadows create an outline around the visible alpha
+     (text letters, photo silhouette, tape strip). NO rectangular box. */
+  .cutout.selected{
+    z-index: 25 !important;
+    filter:
+      drop-shadow(0 0 1px var(--rose-deep))
+      drop-shadow(0 0 1px var(--rose-deep))
+      drop-shadow(0 0 1px var(--rose-deep))
+      drop-shadow(0 0 2px var(--rose))
+      drop-shadow(2px 4px 8px rgba(80,55,40,.32));
   }
-  .cutout.selected{ z-index: 25 !important; }
 
   /* ===== Floating selection toolbar (above the main toolbar) ===== */
   .select-toolbar{
@@ -395,13 +401,19 @@
   }
   .sheet .paper-option.active{ border-color: var(--rose-deep); }
 
-  /* ===== Text & Tape cutouts ===== */
+  /* ===== Text & Tape cutouts — sized strictly to content ===== */
+  .cutout.text{
+    /* override the .cutout .paper { width:100% } pattern */
+    width: auto !important; height: auto !important;
+  }
   .cutout.text .paper{
-    background: transparent; padding: 4px 8px;
+    background: transparent; padding: 2px 6px;
+    width: auto; height: auto;
     white-space: nowrap;
+    display: inline-block;
   }
   .cutout.text .text-content{
-    display:block; line-height:1.05;
+    display:inline-block; line-height:1.05;
   }
   .cutout.tape .paper{
     background: transparent; padding: 0;
