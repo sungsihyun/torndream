@@ -120,27 +120,38 @@
   body.editor-mode .lock-overlay{display:none;}
 
   /* ===== Cutouts =====
-     Torn-paper effect: clip-path with jagged polygon (set per element via JS).
-     The PHOTO inside stays crisp — only the SHAPE is irregular.
-     Shadow goes on .cutout via drop-shadow so it follows the torn outline. */
+     Sticker effect: SVG filter on the photo dilates its alpha into a torn
+     white outline that traces the subject silhouette (after AI bg removal).
+     Drop-shadow on the cutout follows the outline shape since it respects alpha. */
   .cutout{
     position:absolute; cursor:grab; will-change: transform; z-index:10;
-    filter: drop-shadow(2px 4px 8px rgba(80,55,40,.22))
-            drop-shadow(0 1px 2px rgba(80,55,40,.18));
-    touch-action: none;  /* prevent browser pan/zoom on cutout drag */
+    filter: drop-shadow(2px 4px 8px rgba(80,55,40,.28))
+            drop-shadow(0 1px 2px rgba(80,55,40,.2));
+    touch-action: none;
     user-select: none; -webkit-user-select: none;
   }
   .cutout:active{cursor:grabbing;}
   .cutout .paper{
-    background:#fff; padding:5px 5px 14px 5px;
-    position:relative;
-    /* clip-path is set per element in JS — gives each cutout its own jagged edge */
+    background: transparent;   /* no rectangle — outline traces the subject */
+    padding: 0;
+    position: relative;
+    width: 100%; height: 100%;
   }
   .cutout .photo{
-    display:block; width:100%; height:100%; object-fit:cover;
-    filter: contrast(1.04) saturate(.9) sepia(.06);
+    display:block; width:100%; height:100%; object-fit:contain;
+    filter: url(#sticker) contrast(1.04) saturate(.9) sepia(.06);
   }
-  .cutout .paper::after{
+  /* Rectangular fallback for non-transparent images (sample illustrations
+     and any photo where bg removal didn't run): white paper with torn edges. */
+  .cutout.rect .paper{
+    background:#fff; padding:5px 5px 14px 5px;
+    /* clip-path applied per element in JS */
+  }
+  .cutout.rect .photo{
+    filter: contrast(1.04) saturate(.9) sepia(.06);  /* no sticker outline */
+    object-fit: cover;
+  }
+  .cutout.rect .paper::after{
     content:""; position:absolute; inset:5px 5px 14px 5px;
     background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.3   0 0 0 0 0.2   0 0 0 0 0.1   0 0 0 0.15 0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
     mix-blend-mode: multiply; pointer-events:none; opacity:.5;
@@ -322,17 +333,42 @@
 
 <svg width="0" height="0" style="position:absolute">
   <defs>
-    <filter id="torn-edge" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3" result="noise"/>
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+    <!-- Sticker filter: dilates the subject's alpha by ~6px, distorts that
+         outline with noise (so the white edge looks torn from a magazine),
+         fills it with white, then overlays the original (bg-removed) photo
+         on top. Result: photo + white silhouette outline + torn edges. -->
+    <filter id="sticker" x="-20%" y="-20%" width="140%" height="140%">
+      <feMorphology operator="dilate" radius="6" in="SourceAlpha" result="dilated"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="3" result="noise"/>
+      <feDisplacementMap in="dilated" in2="noise" scale="5" result="torn"/>
+      <feFlood flood-color="#fff" result="white"/>
+      <feComposite in="white" in2="torn" operator="in" result="outline"/>
+      <feMerge>
+        <feMergeNode in="outline"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
-    <filter id="torn-edge-2" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7" result="noise"/>
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+    <filter id="sticker-2" x="-20%" y="-20%" width="140%" height="140%">
+      <feMorphology operator="dilate" radius="7" in="SourceAlpha" result="dilated"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="11" result="noise"/>
+      <feDisplacementMap in="dilated" in2="noise" scale="6" result="torn"/>
+      <feFlood flood-color="#fff" result="white"/>
+      <feComposite in="white" in2="torn" operator="in" result="outline"/>
+      <feMerge>
+        <feMergeNode in="outline"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
-    <filter id="torn-edge-3" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="12" result="noise"/>
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    <filter id="sticker-3" x="-20%" y="-20%" width="140%" height="140%">
+      <feMorphology operator="dilate" radius="5" in="SourceAlpha" result="dilated"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="19" result="noise"/>
+      <feDisplacementMap in="dilated" in2="noise" scale="4" result="torn"/>
+      <feFlood flood-color="#fff" result="white"/>
+      <feComposite in="white" in2="torn" operator="in" result="outline"/>
+      <feMerge>
+        <feMergeNode in="outline"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
 
     <!-- Inline illustrated "photos" so prototype works offline -->
@@ -449,33 +485,33 @@
       </div>
 
       <!-- Cutouts (using inline SVG symbols) -->
-      <div class="cutout" data-x="20" data-y="280" data-rot="-7" style="width:130px; height:160px; left:0; top:0;">
+      <div class="cutout rect" data-x="20" data-y="280" data-rot="-7" style="width:130px; height:160px; left:0; top:0;">
         <div class="paper">
           <svg class="photo" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice"><use href="#img-travel"/></svg>
         </div>
         <div class="tape" style="--tape-color:rgba(184,197,166,.75); top:-6px; left:50%; transform:translateX(-50%) rotate(-4deg); width:50px;"></div>
       </div>
 
-      <div class="cutout" data-x="190" data-y="320" data-rot="5" style="width:120px; height:150px; left:0; top:0;">
+      <div class="cutout rect" data-x="190" data-y="320" data-rot="5" style="width:120px; height:150px; left:0; top:0;">
         <div class="paper">
           <svg class="photo" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice"><use href="#img-coffee"/></svg>
         </div>
       </div>
 
-      <div class="cutout" data-x="40" data-y="510" data-rot="3" style="width:130px; height:110px; left:0; top:0;">
+      <div class="cutout rect" data-x="40" data-y="510" data-rot="3" style="width:130px; height:110px; left:0; top:0;">
         <div class="paper">
           <svg class="photo" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice"><use href="#img-books"/></svg>
         </div>
         <div class="tape" style="--tape-color:rgba(201,214,223,.8); top:-5px; left:20%; transform:rotate(-15deg); width:45px;"></div>
       </div>
 
-      <div class="cutout" data-x="195" data-y="540" data-rot="-6" style="width:115px; height:130px; left:0; top:0;">
+      <div class="cutout rect" data-x="195" data-y="540" data-rot="-6" style="width:115px; height:130px; left:0; top:0;">
         <div class="paper">
           <svg class="photo" viewBox="0 0 100 110" preserveAspectRatio="xMidYMid slice"><use href="#img-plant"/></svg>
         </div>
       </div>
 
-      <div class="cutout" data-x="80" data-y="160" data-rot="2" style="width:100px; height:90px; left:0; top:0;">
+      <div class="cutout rect" data-x="80" data-y="160" data-rot="2" style="width:100px; height:90px; left:0; top:0;">
         <div class="paper">
           <svg class="photo" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice"><use href="#img-mountain"/></svg>
         </div>
@@ -607,12 +643,21 @@ function generateTornPath(segmentsPerSide, jitter){
   return 'polygon(' + pts.join(', ') + ')';
 }
 function applyTornEdge(el){
+  // Only apply torn polygon clip-path to rectangular cutouts (samples /
+  // photos without bg removal). Sticker-outlined photos handle their own
+  // torn edge via the SVG filter.
+  if(!el.classList.contains('rect')) return;
   const paper = el.querySelector('.paper');
   if(paper && !paper.style.clipPath){
     const cp = generateTornPath(14, 3.2);
     paper.style.clipPath = cp;
     paper.style.webkitClipPath = cp;
   }
+}
+// Pick a random sticker filter so each cutout has slightly different torn edges
+function randomStickerFilter(){
+  const filters = ['sticker','sticker-2','sticker-3'];
+  return filters[Math.floor(Math.random()*filters.length)];
 }
 
 function initPositions(){
@@ -944,9 +989,11 @@ async function handleFiles(files){
 
       // Try real background removal
       let dataUrl;
+      let bgRemoved = false;
       const cleanBlob = await removeBgIfPossible(file);
       if(cleanBlob){
         dataUrl = await blobToDataURL(cleanBlob);
+        bgRemoved = true;
         dbg('clean cutout ready');
       } else {
         dataUrl = await readFileAsDataURL(file);
@@ -956,7 +1003,7 @@ async function handleFiles(files){
       // brief pause for visual continuity
       await new Promise(r => setTimeout(r, 300));
       document.getElementById('modal').classList.remove('show');
-      addUploadedCutout(dataUrl);
+      addUploadedCutout(dataUrl, bgRemoved);
       await new Promise(r => setTimeout(r, 200));
     }
     dbg('done — tap a photo to edit');
@@ -975,32 +1022,33 @@ function readFileAsDataURL(file){
   });
 }
 
-function addUploadedCutout(dataUrl){
-  // Place the cutout immediately with default size — don't wait for image load.
-  // Even if loading the data: URL is blocked by CSP, the paper card will still appear.
+function addUploadedCutout(dataUrl, bgRemoved){
+  // bgRemoved=true → sticker-outline style (silhouette-following torn edge)
+  // bgRemoved=false → fallback to rectangular paper with torn polygon
   try {
     const canvas = document.getElementById('canvas');
     const h = 150 + Math.floor(Math.random()*30);
     const w = 120 + Math.floor(Math.random()*40);
-    const filters = ['torn-edge','torn-edge-2','torn-edge-3'];
-    const f = filters[Math.floor(Math.random()*3)];
     const x = 20 + Math.floor(Math.random()*(320 - w));
     const y = 220 + Math.floor(Math.random()*380);
     const rot = -8 + Math.floor(Math.random()*16);
 
     const div = document.createElement('div');
-    div.className = 'cutout';
+    div.className = bgRemoved ? 'cutout' : 'cutout rect';
     div.dataset.x = x; div.dataset.y = y; div.dataset.rot = rot; div.dataset.scale = 1;
     div.style.width = w+'px'; div.style.height = h+'px';
     applyTransform(div);
+    // Pick a random sticker variant for visual variety
+    const stickerStyle = bgRemoved ? ('filter: url(#' + randomStickerFilter() + ') contrast(1.04) saturate(.9) sepia(.06);') : '';
     div.innerHTML =
       '<div class="paper">' +
         '<img class="photo" src="' + dataUrl + '" alt="your photo" ' +
+             'style="' + stickerStyle + '" ' +
              'onload="dbg(\'image rendered\')" ' +
              'onerror="dbg(\'IMG load failed (CSP?)\', true)"/>' +
       '</div>';
     canvas.appendChild(div);
-    applyTornEdge(div);
+    applyTornEdge(div);  // no-op for non-rect cutouts
     bindCutout(div);
     dbg('cutout added to canvas');
     const base = 'translate(' + x + 'px,' + y + 'px) rotate(' + rot + 'deg)';
@@ -1027,7 +1075,7 @@ function addRandomCutout(){
   const rot = -8 + Math.floor(Math.random()*16);
 
   const div = document.createElement('div');
-  div.className = 'cutout';
+  div.className = 'cutout rect';  // samples are rectangular illustrations
   div.dataset.x = x; div.dataset.y = y; div.dataset.rot = rot; div.dataset.scale = 1;
   div.style.width = w+'px'; div.style.height = h+'px';
   applyTransform(div);
