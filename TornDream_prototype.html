@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TornDream — Vision Board Wallpaper</title>
+<style>
+  :root{
+    --cream:#FAF3E7;
+    --cream-deep:#F0E4CF;
+    --rose:#E8B4B8;
+    --rose-deep:#C97B7B;
+    --sage:#B8C5A6;
+    --sky:#C9D6DF;
+    --mustard:#D4A859;
+    --sepia:#5C4848;
+    --paper-shadow: 2px 6px 14px rgba(80,55,40,.18), 0 1px 3px rgba(80,55,40,.12);
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --hand: 'Bradley Hand', 'Brush Script MT', cursive;
+    --display: 'Bodoni 72', 'Didot', 'Playfair Display', Georgia, serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--sans);
+    background:
+      radial-gradient(ellipse at 30% 20%, #2a2422 0%, #1a1614 100%);
+    min-height:100vh;
+    color:var(--sepia);
+    overflow-x:hidden;
+    display:flex; flex-direction:column; align-items:center;
+    padding: 20px 0 40px;
+  }
+
+  .page-header{
+    text-align:center; color:#FAF3E7; margin-bottom:18px;
+    max-width:430px; padding: 0 24px;
+  }
+  .page-header h1{
+    font-family:var(--display); font-size:32px; color:var(--rose);
+    letter-spacing:1px; font-weight:700;
+  }
+  .page-header p{
+    font-family:var(--hand); font-size:18px; color:#d9c9b8; margin-top:6px;
+  }
+
+  /* ===== Phone frame ===== */
+  .phone{
+    width: 360px; height: 780px;
+    background:#000; border-radius: 44px; padding: 8px;
+    box-shadow:
+      0 30px 60px rgba(0,0,0,.5),
+      0 0 0 2px #333 inset,
+      0 0 80px rgba(232,180,184,.2);
+    position:relative;
+  }
+  .phone::before{
+    content:""; position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width: 110px; height: 28px; background:#000; border-radius:18px; z-index:60;
+  }
+
+  .screen{
+    width:100%; height:100%;
+    border-radius: 36px; overflow:hidden; position:relative;
+    background:#FAF3E7;
+  }
+
+  /* ===== Canvas — the wallpaper ===== */
+  .canvas{
+    position:absolute; inset:0;
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.88   0 0 0 0 0.78   0 0 0 0 0.62   0 0 0 0.12 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+      linear-gradient(165deg, #F8EBD3 0%, #EFDCB8 50%, #E8CDA8 100%);
+    overflow:hidden; touch-action:none;
+  }
+  .canvas::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(100,70,40,.15) 100%);
+  }
+
+  /* ===== Lock screen overlay ===== */
+  .lock-overlay{
+    position:absolute; inset:0; z-index:40; pointer-events:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .status-bar{
+    width:100%; padding: 22px 28px 8px;
+    display:flex; justify-content:space-between; align-items:center;
+    color:#fff; font-size:13px; font-weight:600;
+    text-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .clock{
+    margin-top: 18px; font-family:var(--sans); font-weight:200;
+    font-size: 72px; color:#fff; line-height:1;
+    text-shadow: 0 2px 8px rgba(0,0,0,.25); letter-spacing: -2px;
+  }
+  .date{
+    color:#fff; font-size:14px; font-weight:600; margin-top:4px;
+    text-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  .home-indicator{
+    position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+    width:120px; height:5px; border-radius:3px; background:#fff; opacity:.85;
+  }
+
+  .safe-zone{
+    position:absolute; left:14px; right:14px;
+    border: 1.5px dashed rgba(255,255,255,.6);
+    border-radius:8px; pointer-events:none; z-index:30; display:none;
+  }
+  .safe-zone.top{ top:18px; height: 200px; }
+  .safe-zone.bot{ bottom:30px; height: 90px; }
+  .safe-zone .label{
+    position:absolute; top:-9px; left:10px;
+    background:#FAF3E7; color:var(--sepia); font-size:9px; font-weight:600;
+    padding: 1px 6px; border-radius:3px; letter-spacing:.5px; text-transform:uppercase;
+  }
+  body.editor-mode .safe-zone{display:block;}
+  body.editor-mode .lock-overlay{display:none;}
+
+  /* ===== Cutouts =====
+     Torn-paper effect: clip-path with jagged polygon (set per element via JS).
+     The PHOTO inside stays crisp — only the SHAPE is irregular.
+     Shadow goes on .cutout via drop-shadow so it follows the torn outline. */
+  .cutout{
+    position:absolute; cursor:grab; will-change: transform; z-index:10;
+    filter: drop-shadow(2px 4px 8px rgba(80,55,40,.22))
+            drop-shadow(0 1px 2px rgba(80,55,40,.18));
+  }
+  .cutout:active{cursor:grabbing;}
+  .cutout .paper{
+    background:#fff; padding:5px 5px 14px 5px;
+    position:relative;
+    /* clip-path is set per element in JS — gives each cutout its own jagged edge */
+  }
+  .cutout .photo{
+    display:block; width:100%; height:100%; object-fit:cover;
+    filter: contrast(1.04) saturate(.9) sepia(.06);
+  }
+  .cutout .paper::after{
+    content:""; position:absolute; inset:5px 5px 14px 5px;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.3   0 0 0 0 0.2   0 0 0 0 0.1   0 0 0 0.15 0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)'/></svg>");
+    mix-blend-mode: multiply; pointer-events:none; opacity:.5;
+  }
+  .tape{
+    position:absolute; height:18px;
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.25) 0 5px, transparent 5px 10px),
+      var(--tape-color, rgba(232,180,184,.7));
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    border-left: 1px dashed rgba(0,0,0,.08);
+    border-right: 1px dashed rgba(0,0,0,.08);
+    pointer-events:none;
+  }
+  .headline{
+    position:absolute; font-family:var(--display); font-weight:700;
+    color:var(--sepia); text-shadow: 1px 2px 0 rgba(255,255,255,.4);
+    line-height:.95; pointer-events:none; z-index:15; letter-spacing:.5px;
+  }
+  .marker{
+    position:absolute; font-family:var(--hand); font-weight:700;
+    color:var(--rose-deep); pointer-events:none; z-index:15;
+  }
+  .handwritten{
+    position:absolute; font-family:var(--hand);
+    color:var(--sepia); pointer-events:none; z-index:15;
+    font-style: italic;
+  }
+
+  /* ===== Editor UI ===== */
+  .editor-toolbar{
+    position:absolute; bottom: 28px; left:14px; right:14px;
+    background: rgba(250,243,231,.95);
+    backdrop-filter: blur(12px);
+    border-radius:22px; padding: 10px 8px;
+    display:none; justify-content:space-around; align-items:center;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index:50;
+  }
+  body.editor-mode .editor-toolbar{display:flex;}
+  .tool{
+    background:none; border:none; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:6px 8px; border-radius:12px;
+    color:var(--sepia); font-family:var(--sans); font-size:9px; font-weight:600;
+    transition: background .15s, transform .15s;
+  }
+  .tool:hover{background:rgba(232,180,184,.2);}
+  .tool:active{transform:scale(.92);}
+  .tool .ico{
+    width:36px; height:36px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 4px rgba(80,55,40,.15);
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+  }
+  .tool.primary .ico{
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+    color:#fff; width:46px; height:46px; font-size:22px;
+    box-shadow: 0 4px 12px rgba(201,123,123,.4);
+  }
+
+  .editor-topbar{
+    position:absolute; top:14px; left:14px; right:14px;
+    display:none; justify-content:space-between; align-items:center; z-index:50;
+  }
+  body.editor-mode .editor-topbar{display:flex;}
+  .pill-btn{
+    background: rgba(250,243,231,.95); backdrop-filter: blur(12px);
+    border:none; padding: 8px 14px; border-radius:18px;
+    font-family:var(--sans); font-size:12px; font-weight:600;
+    color:var(--sepia); cursor:pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    display:flex; align-items:center; gap:6px;
+  }
+  .pill-btn.primary{
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+    color:#fff;
+  }
+
+  .mode-controls{
+    margin-top: 22px; display:flex; gap:10px;
+  }
+  .mode-btn{
+    padding:10px 18px;
+    background: rgba(250,243,231,.1);
+    border:1px solid rgba(250,243,231,.3);
+    color:#FAF3E7; font-family:var(--sans); font-size:13px; font-weight:600;
+    border-radius:24px; cursor:pointer; transition: all .2s;
+  }
+  .mode-btn:hover{background: rgba(250,243,231,.2);}
+  .mode-btn.active{
+    background:var(--rose); color:#fff; border-color:transparent;
+  }
+
+  .modal{
+    position:absolute; inset:0; background:rgba(0,0,0,.5);
+    display:none; align-items:center; justify-content:center; z-index:100;
+    border-radius:36px;
+  }
+  .modal.show{display:flex;}
+  .modal .card{
+    background:var(--cream); padding:24px 22px; border-radius:18px;
+    text-align:center; max-width:220px;
+    box-shadow:0 20px 50px rgba(0,0,0,.3); transform: rotate(-1deg);
+  }
+  .scissors{
+    font-size:40px; display:inline-block;
+    animation: cut 1.2s ease-in-out infinite;
+  }
+  @keyframes cut{
+    0%,100%{transform:rotate(-12deg);}
+    50%{transform:rotate(12deg);}
+  }
+  .modal h3{
+    font-family:var(--sans); font-size:15px; margin-top:10px;
+    color:var(--sepia); font-weight:700;
+  }
+  .modal p{
+    font-family:var(--hand); font-size:16px; color:var(--rose-deep);
+    margin-top:4px;
+  }
+
+  .help{
+    margin-top: 24px; color:#9a8b7c; font-family:var(--sans);
+    font-size:12px; text-align:center; max-width:380px; padding: 0 20px;
+    line-height:1.5;
+  }
+  .help b{color:#d9c9b8;}
+
+  /* ===== Selected cutout (dashed outline + corner badge) ===== */
+  .cutout.selected .paper{
+    outline: 2px dashed rgba(232, 180, 184, .95);
+    outline-offset: 4px;
+  }
+  .cutout.selected{ z-index: 25 !important; }
+
+  /* ===== Floating selection toolbar (above the main toolbar) ===== */
+  .select-toolbar{
+    position:absolute; bottom: 86px; left:14px; right:14px;
+    background: rgba(92,72,72,.95);
+    backdrop-filter: blur(12px);
+    border-radius:18px; padding: 6px;
+    display:none; justify-content:space-around; align-items:center;
+    box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    z-index:55;
+  }
+  body.has-selection .select-toolbar{display:flex;}
+  .select-toolbar button{
+    background: rgba(255,255,255,.12);
+    border: none; cursor: pointer;
+    width: 36px; height: 36px; border-radius: 50%;
+    color: #fff; font-family: var(--sans); font-size: 16px; font-weight: 600;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .15s, transform .15s;
+  }
+  .select-toolbar button:hover{ background: rgba(255,255,255,.22); }
+  .select-toolbar button:active{ transform: scale(.92); }
+  .select-toolbar button.delete{
+    background: var(--rose-deep); color: #fff;
+  }
+  .select-toolbar .label{
+    color:#FAF3E7; font-family:var(--sans); font-size:10px;
+    font-weight:600; letter-spacing:.5px; text-transform:uppercase;
+    padding: 0 6px; opacity:.7;
+  }
+
+  /* Drag-over visual */
+  .phone.dragover .screen::before{
+    content:"Drop your photo here ✂️";
+    position:absolute; inset:0; z-index:200;
+    background: rgba(232,180,184,.85);
+    color:#fff; font-family:var(--sans); font-weight:700; font-size:20px;
+    display:flex; align-items:center; justify-content:center;
+    border: 3px dashed #fff;
+    border-radius: 36px;
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="torn-edge" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="torn-edge-2" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="torn-edge-3" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="12" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- Inline illustrated "photos" so prototype works offline -->
+    <symbol id="img-travel" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="120" fill="#E8B4B8"/>
+      <rect y="70" width="100" height="50" fill="#C97B7B"/>
+      <circle cx="75" cy="30" r="14" fill="#FAF3E7" opacity=".7"/>
+      <path d="M 0 80 Q 25 65 50 75 T 100 70 L 100 120 L 0 120 Z" fill="#8B5A5A" opacity=".8"/>
+      <path d="M 0 95 Q 30 85 60 92 T 100 88 L 100 120 L 0 120 Z" fill="#5C4848" opacity=".6"/>
+    </symbol>
+
+    <symbol id="img-coffee" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="120" fill="#D4A859"/>
+      <rect width="100" height="60" fill="#8B5A2B"/>
+      <ellipse cx="50" cy="65" rx="28" ry="8" fill="#3D2A1F"/>
+      <rect x="22" y="55" width="56" height="40" rx="3" fill="#FAF3E7"/>
+      <rect x="22" y="55" width="56" height="10" fill="#5C4848"/>
+      <path d="M 78 60 Q 90 65 88 75 Q 86 80 78 78" fill="none" stroke="#FAF3E7" stroke-width="3"/>
+      <text x="50" y="110" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="10" fill="#FAF3E7">slow morning</text>
+    </symbol>
+
+    <symbol id="img-books" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="80" fill="#B8C5A6"/>
+      <rect x="10" y="20" width="20" height="55" fill="#C97B7B"/>
+      <rect x="32" y="15" width="18" height="60" fill="#D4A859"/>
+      <rect x="52" y="25" width="22" height="50" fill="#5C4848"/>
+      <rect x="76" y="18" width="16" height="57" fill="#8B5A5A"/>
+      <line x1="10" y1="35" x2="30" y2="35" stroke="#FAF3E7" stroke-width=".8"/>
+      <line x1="32" y1="30" x2="50" y2="30" stroke="#FAF3E7" stroke-width=".8"/>
+      <line x1="52" y1="40" x2="74" y2="40" stroke="#FAF3E7" stroke-width=".8"/>
+    </symbol>
+
+    <symbol id="img-plant" viewBox="0 0 100 110" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="110" fill="#FAF3E7"/>
+      <path d="M 50 70 Q 30 50 28 25 Q 35 35 50 45 Q 65 35 72 25 Q 70 50 50 70 Z" fill="#7A8C66"/>
+      <path d="M 50 70 Q 25 60 18 40 Q 30 50 50 55" fill="#B8C5A6"/>
+      <path d="M 50 70 Q 75 60 82 40 Q 70 50 50 55" fill="#B8C5A6"/>
+      <path d="M 35 80 L 65 80 L 70 105 L 30 105 Z" fill="#C97B7B"/>
+      <rect x="32" y="78" width="36" height="4" fill="#8B5A5A"/>
+    </symbol>
+
+    <symbol id="img-mountain" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="80" fill="#C9D6DF"/>
+      <circle cx="78" cy="22" r="10" fill="#FAF3E7" opacity=".9"/>
+      <path d="M 0 65 L 25 30 L 45 55 L 65 25 L 100 60 L 100 80 L 0 80 Z" fill="#7A8C9E"/>
+      <path d="M 20 40 L 25 30 L 30 40 Z M 60 35 L 65 25 L 70 35 Z" fill="#FAF3E7"/>
+      <path d="M 0 70 Q 25 65 50 70 T 100 68 L 100 80 L 0 80 Z" fill="#5C6B7A"/>
+    </symbol>
+
+    <symbol id="img-ocean" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="100" fill="#C9D6DF"/>
+      <rect y="50" width="100" height="50" fill="#7A8C9E"/>
+      <circle cx="50" cy="35" r="12" fill="#D4A859" opacity=".9"/>
+      <path d="M 0 55 Q 25 50 50 55 T 100 53 L 100 60 L 0 60 Z" fill="#5C6B7A"/>
+      <path d="M 0 65 Q 25 60 50 65 T 100 63 L 100 70 L 0 70 Z" fill="#7A8C9E"/>
+      <path d="M 0 80 Q 30 75 60 80 T 100 78 L 100 100 L 0 100 Z" fill="#5C6B7A"/>
+    </symbol>
+
+    <symbol id="img-fashion" viewBox="0 0 100 130" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="130" fill="#E8B4B8"/>
+      <circle cx="50" cy="30" r="14" fill="#F0D4B8"/>
+      <path d="M 36 30 Q 32 18 50 16 Q 68 18 64 30 L 64 25 Q 60 22 50 22 Q 40 22 36 25 Z" fill="#5C4848"/>
+      <path d="M 30 60 Q 50 50 70 60 L 75 110 L 25 110 Z" fill="#FAF3E7"/>
+      <path d="M 30 60 L 25 100 L 28 110 L 35 75 Z M 70 60 L 75 100 L 72 110 L 65 75 Z" fill="#F0E4CF"/>
+      <ellipse cx="50" cy="55" rx="3" ry="2" fill="#C97B7B"/>
+    </symbol>
+
+    <symbol id="img-sky" viewBox="0 0 100 90" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="90" fill="#C9D6DF"/>
+      <rect y="50" width="100" height="40" fill="#E8B4B8" opacity=".5"/>
+      <circle cx="70" cy="35" r="15" fill="#D4A859" opacity=".7"/>
+      <ellipse cx="20" cy="25" rx="18" ry="6" fill="#FAF3E7" opacity=".8"/>
+      <ellipse cx="55" cy="20" rx="12" ry="4" fill="#FAF3E7" opacity=".6"/>
+      <ellipse cx="85" cy="15" rx="10" ry="3" fill="#FAF3E7" opacity=".7"/>
+    </symbol>
+
+    <symbol id="img-flower" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+      <rect width="100" height="100" fill="#FAF3E7"/>
+      <circle cx="50" cy="50" r="35" fill="none"/>
+      <ellipse cx="50" cy="30" rx="12" ry="18" fill="#E8B4B8"/>
+      <ellipse cx="70" cy="50" rx="18" ry="12" fill="#E8B4B8"/>
+      <ellipse cx="50" cy="70" rx="12" ry="18" fill="#E8B4B8"/>
+      <ellipse cx="30" cy="50" rx="18" ry="12" fill="#E8B4B8"/>
+      <ellipse cx="64" cy="36" rx="12" ry="15" transform="rotate(45 64 36)" fill="#F0C4C8"/>
+      <ellipse cx="64" cy="64" rx="12" ry="15" transform="rotate(-45 64 64)" fill="#F0C4C8"/>
+      <ellipse cx="36" cy="64" rx="12" ry="15" transform="rotate(45 36 64)" fill="#F0C4C8"/>
+      <ellipse cx="36" cy="36" rx="12" ry="15" transform="rotate(-45 36 36)" fill="#F0C4C8"/>
+      <circle cx="50" cy="50" r="10" fill="#D4A859"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="page-header">
+  <h1>TornDream</h1>
+  <p>your dreams, torn from a magazine — on your lock screen</p>
+</div>
+
+<div class="phone">
+  <div class="screen">
+
+    <div class="canvas" id="canvas">
+
+      <!-- Decorative text -->
+      <div class="headline" style="top:38%; left:14px; font-size:42px; transform:rotate(-4deg); color:#8B5A5A; line-height:.9;">
+        DREAM<br/>BIG
+      </div>
+
+      <div class="marker" style="top:54%; right:14px; font-size:18px; transform:rotate(5deg); max-width:130px; text-align:right; line-height:1.1;">
+        I am becoming<br/>her ✨
+      </div>
+
+      <div class="handwritten" style="bottom:38%; left:18px; font-size:22px; transform:rotate(-2deg); color:#A67373;">
+        slow mornings,<br/>strong coffee
+      </div>
+
+      <!-- Cutouts (using inline SVG symbols) -->
+      <div class="cutout" data-x="20" data-y="280" data-rot="-7" style="width:130px; height:160px; left:0; top:0;">
+        <div class="paper">
+          <svg class="photo" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice"><use href="#img-travel"/></svg>
+        </div>
+        <div class="tape" style="--tape-color:rgba(184,197,166,.75); top:-6px; left:50%; transform:translateX(-50%) rotate(-4deg); width:50px;"></div>
+      </div>
+
+      <div class="cutout" data-x="190" data-y="320" data-rot="5" style="width:120px; height:150px; left:0; top:0;">
+        <div class="paper">
+          <svg class="photo" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice"><use href="#img-coffee"/></svg>
+        </div>
+      </div>
+
+      <div class="cutout" data-x="40" data-y="510" data-rot="3" style="width:130px; height:110px; left:0; top:0;">
+        <div class="paper">
+          <svg class="photo" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice"><use href="#img-books"/></svg>
+        </div>
+        <div class="tape" style="--tape-color:rgba(201,214,223,.8); top:-5px; left:20%; transform:rotate(-15deg); width:45px;"></div>
+      </div>
+
+      <div class="cutout" data-x="195" data-y="540" data-rot="-6" style="width:115px; height:130px; left:0; top:0;">
+        <div class="paper">
+          <svg class="photo" viewBox="0 0 100 110" preserveAspectRatio="xMidYMid slice"><use href="#img-plant"/></svg>
+        </div>
+      </div>
+
+      <div class="cutout" data-x="80" data-y="160" data-rot="2" style="width:100px; height:90px; left:0; top:0;">
+        <div class="paper">
+          <svg class="photo" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice"><use href="#img-mountain"/></svg>
+        </div>
+      </div>
+
+      <div class="headline" style="bottom:6%; left:50%; transform:translateX(-50%) rotate(-1deg); font-size:14px; text-align:center; color:#5C4848; opacity:.85;">
+        the soft<br/>life
+      </div>
+
+      <div class="safe-zone top"><span class="label">Clock area</span></div>
+      <div class="safe-zone bot"><span class="label">Dock area</span></div>
+    </div>
+
+    <div class="lock-overlay" id="lockOverlay">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span style="font-size:11px;">●●●●● 5G ▮▮▮</span>
+      </div>
+      <div class="clock">9:41</div>
+      <div class="date">Wednesday, May 27</div>
+      <div class="home-indicator"></div>
+    </div>
+
+    <div class="editor-topbar">
+      <button class="pill-btn" onclick="setMode('lock')">✕ Close</button>
+      <button class="pill-btn primary" onclick="alert('Exported at 1290 × 2796 — ready to set as wallpaper')">Export ↗</button>
+    </div>
+
+    <!-- Selection toolbar — appears when a cutout is tapped.
+         Primary interaction is pinch-to-resize + rotate with 2 fingers.
+         Buttons are desktop fallback + delete. -->
+    <div class="select-toolbar" id="selectToolbar">
+      <span class="label">pinch to resize & rotate</span>
+      <button onclick="rotateSelected(-15)" title="Rotate left">↺</button>
+      <button onclick="rotateSelected(15)" title="Rotate right">↻</button>
+      <button class="delete" onclick="deleteSelected()" title="Delete">✕</button>
+    </div>
+
+    <div class="editor-toolbar">
+      <button class="tool" onclick="addRandomCutout()" title="Sample cutout">
+        <div class="ico">✨</div><span>Sample</span>
+      </button>
+      <button class="tool" onclick="alert('Text panel (demo)')">
+        <div class="ico">T</div><span>Text</span>
+      </button>
+      <button class="tool primary" onclick="openPhotoPicker()" title="Pick a photo from your library">
+        <div class="ico">📷</div><span>Photo</span>
+      </button>
+      <button class="tool" onclick="alert('Washi tape panel (demo)')">
+        <div class="ico">▰</div><span>Tape</span>
+      </button>
+      <button class="tool" onclick="alert('Background paper (demo)')">
+        <div class="ico">❀</div><span>Paper</span>
+      </button>
+    </div>
+
+    <!-- File picker — triggered by Photo button. Inline onchange = most reliable. -->
+    <input type="file" id="photoInput" accept="image/*" multiple
+           onchange="handlePhotoInput(event)"
+           style="display:none"/>
+
+    <!-- Debug status — shows what's happening so we can see where it breaks -->
+    <div id="debug" style="position:absolute; top:60px; left:50%; transform:translateX(-50%);
+                            background:rgba(0,0,0,.75); color:#fff; font-family:monospace;
+                            font-size:11px; padding:6px 12px; border-radius:12px;
+                            z-index:200; pointer-events:none; max-width:300px; text-align:center;
+                            opacity:0; transition: opacity .25s;">
+      ready
+    </div>
+
+    <div class="modal" id="modal">
+      <div class="card">
+        <div class="scissors">✂</div>
+        <h3 id="modalTitle">Cutting out your photo...</h3>
+        <p id="modalSub">removing the background</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="mode-controls">
+  <button class="mode-btn active" id="btnLock" onclick="setMode('lock')">🔒 Lock screen preview</button>
+  <button class="mode-btn" id="btnEdit" onclick="setMode('edit')">✏ Editor mode</button>
+</div>
+
+<div class="help">
+  Canvas is <b>9 : 19.5</b> — modern iPhone wallpaper ratio (1290 × 2796 px).<br/>
+  <b>📷 Photo</b> uploads from your library · <b>1 finger drag</b> moves · <b>2 finger pinch</b> resizes &amp; rotates simultaneously · <b>tap</b> a photo to select &amp; delete.<br/>
+  <span style="color:#9a8b7c; font-size:11px;">
+    On desktop, trackpad pinch also resizes the selected photo (Ctrl+scroll). AI background removal loads on first upload (~30s, then instant). Open in Chrome/Safari for best results.
+  </span>
+</div>
+
+<script>
+function setMode(mode){
+  document.body.classList.toggle('editor-mode', mode === 'edit');
+  document.getElementById('btnLock').classList.toggle('active', mode === 'lock');
+  document.getElementById('btnEdit').classList.toggle('active', mode === 'edit');
+  if(mode === 'edit') loadBgRemoval(); // preload AI model in background
+}
+
+// ===== Generate jagged "torn paper" clip-path =====
+// Creates a polygon around the perimeter with small random offsets so the
+// edge looks hand-torn. Photo inside stays undistorted.
+function generateTornPath(segmentsPerSide, jitter){
+  segmentsPerSide = segmentsPerSide || 14;
+  jitter = jitter == null ? 3.2 : jitter; // % of width/height
+  const pts = [];
+  function jit(){ return (Math.random() * jitter); }
+  // top edge (left → right)
+  for(let i=0; i<=segmentsPerSide; i++){
+    pts.push(((i/segmentsPerSide)*100).toFixed(2) + '% ' + jit().toFixed(2) + '%');
+  }
+  // right edge (top → bottom)
+  for(let i=1; i<=segmentsPerSide; i++){
+    pts.push((100 - jit()).toFixed(2) + '% ' + ((i/segmentsPerSide)*100).toFixed(2) + '%');
+  }
+  // bottom edge (right → left)
+  for(let i=1; i<=segmentsPerSide; i++){
+    pts.push((100 - (i/segmentsPerSide)*100).toFixed(2) + '% ' + (100 - jit()).toFixed(2) + '%');
+  }
+  // left edge (bottom → top)
+  for(let i=1; i<segmentsPerSide; i++){
+    pts.push(jit().toFixed(2) + '% ' + (100 - (i/segmentsPerSide)*100).toFixed(2) + '%');
+  }
+  return 'polygon(' + pts.join(', ') + ')';
+}
+function applyTornEdge(el){
+  const paper = el.querySelector('.paper');
+  if(paper && !paper.style.clipPath){
+    const cp = generateTornPath(14, 3.2);
+    paper.style.clipPath = cp;
+    paper.style.webkitClipPath = cp;
+  }
+}
+
+function initPositions(){
+  document.querySelectorAll('.cutout').forEach(el=>{
+    if(!el.dataset.scale) el.dataset.scale = 1;
+    applyTransform(el);
+    applyTornEdge(el);
+  });
+}
+initPositions();
+
+// ===== Selection state =====
+let selectedCutout = null;
+function applyTransform(el){
+  const x = parseFloat(el.dataset.x) || 0;
+  const y = parseFloat(el.dataset.y) || 0;
+  const r = parseFloat(el.dataset.rot) || 0;
+  const s = parseFloat(el.dataset.scale) || 1;
+  el.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg) scale(${s})`;
+}
+function selectCutout(el){
+  if(selectedCutout === el) return;
+  if(selectedCutout) selectedCutout.classList.remove('selected');
+  selectedCutout = el;
+  el.classList.add('selected');
+  document.body.classList.add('has-selection');
+}
+function deselectCutout(){
+  if(!selectedCutout) return;
+  selectedCutout.classList.remove('selected');
+  selectedCutout = null;
+  document.body.classList.remove('has-selection');
+}
+// Toolbar actions
+function rotateSelected(deg){
+  if(!selectedCutout) return;
+  const r = (parseFloat(selectedCutout.dataset.rot) || 0) + deg;
+  selectedCutout.dataset.rot = r;
+  applyTransform(selectedCutout);
+}
+function resizeSelected(factor){
+  if(!selectedCutout) return;
+  const s = Math.max(0.3, Math.min(3, (parseFloat(selectedCutout.dataset.scale) || 1) * factor));
+  selectedCutout.dataset.scale = s;
+  applyTransform(selectedCutout);
+}
+function deleteSelected(){
+  if(!selectedCutout) return;
+  const el = selectedCutout;
+  deselectCutout();
+  el.animate(
+    [{transform: el.style.transform, opacity:1},
+     {transform: el.style.transform + ' scale(.3)', opacity:0}],
+    {duration: 250, easing:'ease-in'}
+  ).onfinish = () => el.remove();
+}
+
+// ===== Unified pointer/gesture handling =====
+// 1 finger / mouse drag = move
+// 2 fingers           = pinch-to-scale + rotate (simultaneously)
+// quick tap (no move) = select for delete-button access
+const TAP_THRESHOLD = 5;
+
+let active = null;
+let gesture = null; // current interaction state
+
+function dist(t1, t2){
+  return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+}
+function angle(t1, t2){
+  return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * 180 / Math.PI;
+}
+
+function startDrag(x, y, el){
+  active = el;
+  gesture = {
+    mode: 'drag',
+    startX: x, startY: y,
+    baseX: parseFloat(el.dataset.x) || 0,
+    baseY: parseFloat(el.dataset.y) || 0,
+    moved: false
+  };
+  el.style.zIndex = 30;
+}
+function startPinch(t1, t2, el){
+  active = el;
+  gesture = {
+    mode: 'pinch',
+    startDist: dist(t1, t2),
+    startAngle: angle(t1, t2),
+    baseScale: parseFloat(el.dataset.scale) || 1,
+    baseRot: parseFloat(el.dataset.rot) || 0
+  };
+  el.style.zIndex = 30;
+}
+
+function onPointerStart(e, el){
+  if(!document.body.classList.contains('editor-mode')) return;
+  if(e.touches){
+    if(e.touches.length === 1){
+      startDrag(e.touches[0].clientX, e.touches[0].clientY, el);
+    } else if(e.touches.length >= 2){
+      startPinch(e.touches[0], e.touches[1], el);
+    }
+  } else {
+    startDrag(e.clientX, e.clientY, el);
+  }
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+function onPointerMove(e){
+  if(!active || !gesture) return;
+
+  // 2 → 1 finger transition during a move: upgrade/downgrade gracefully
+  if(e.touches){
+    if(gesture.mode === 'drag' && e.touches.length >= 2){
+      startPinch(e.touches[0], e.touches[1], active);
+      e.preventDefault();
+      return;
+    }
+    if(gesture.mode === 'pinch' && e.touches.length === 1){
+      startDrag(e.touches[0].clientX, e.touches[0].clientY, active);
+      e.preventDefault();
+      return;
+    }
+  }
+
+  if(gesture.mode === 'drag'){
+    const p = e.touches ? e.touches[0] : e;
+    const dx = p.clientX - gesture.startX;
+    const dy = p.clientY - gesture.startY;
+    if(!gesture.moved && (Math.abs(dx) + Math.abs(dy)) > TAP_THRESHOLD) gesture.moved = true;
+    if(gesture.moved){
+      active.dataset.x = gesture.baseX + dx;
+      active.dataset.y = gesture.baseY + dy;
+      applyTransform(active);
+    }
+  } else if(gesture.mode === 'pinch' && e.touches && e.touches.length >= 2){
+    const t1 = e.touches[0], t2 = e.touches[1];
+    const newDist = dist(t1, t2);
+    const newAngle = angle(t1, t2);
+    const scaleFactor = newDist / gesture.startDist;
+    const rotDelta = newAngle - gesture.startAngle;
+    const newScale = Math.max(0.25, Math.min(4, gesture.baseScale * scaleFactor));
+    const newRot = gesture.baseRot + rotDelta;
+    active.dataset.scale = newScale;
+    active.dataset.rot = newRot;
+    applyTransform(active);
+  }
+  if(e.cancelable) e.preventDefault();
+}
+
+function onPointerEnd(e){
+  if(!active) return;
+  // If we lifted one finger but another remains, keep interacting
+  if(e && e.touches && e.touches.length > 0){
+    if(e.touches.length === 1 && gesture && gesture.mode === 'pinch'){
+      startDrag(e.touches[0].clientX, e.touches[0].clientY, active);
+    }
+    return;
+  }
+  if(gesture && gesture.mode === 'drag' && !gesture.moved){
+    selectCutout(active);
+  }
+  const el = active;
+  active = null; gesture = null;
+  setTimeout(()=>{ if(el && selectedCutout !== el) el.style.zIndex = ''; }, 50);
+}
+
+function bindCutout(el){
+  el.addEventListener('mousedown',  e => onPointerStart(e, el));
+  el.addEventListener('touchstart', e => onPointerStart(e, el), {passive:false});
+}
+document.querySelectorAll('.cutout').forEach(bindCutout);
+document.addEventListener('mousemove', onPointerMove);
+document.addEventListener('touchmove', onPointerMove, {passive:false});
+document.addEventListener('mouseup',  onPointerEnd);
+document.addEventListener('touchend', onPointerEnd);
+document.addEventListener('touchcancel', onPointerEnd);
+
+// Trackpad pinch (desktop) — browsers send wheel with ctrlKey when user pinches
+document.getElementById('canvas').addEventListener('wheel', (e) => {
+  if(!e.ctrlKey || !selectedCutout) return;
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.05 : 0.95;
+  const s = Math.max(0.25, Math.min(4, (parseFloat(selectedCutout.dataset.scale) || 1) * factor));
+  selectedCutout.dataset.scale = s;
+  applyTransform(selectedCutout);
+}, {passive:false});
+
+// Click on empty canvas → deselect
+document.getElementById('canvas').addEventListener('click', (e) => {
+  if(!e.target.closest('.cutout')) deselectCutout();
+});
+
+const samplePool = [
+  {sym:'#img-ocean', vb:'0 0 100 100'},
+  {sym:'#img-fashion', vb:'0 0 100 130'},
+  {sym:'#img-sky', vb:'0 0 100 90'},
+  {sym:'#img-flower', vb:'0 0 100 100'},
+  {sym:'#img-mountain', vb:'0 0 100 80'},
+];
+let nextIdx = 0;
+
+// ===== AI Background Removal (lazy-loaded from CDN) =====
+let bgMod = null;        // loaded library
+let bgLoading = false;   // load in progress
+let bgFailed = false;    // permanently failed
+
+async function loadBgRemoval(){
+  if(bgMod || bgFailed) return bgMod;
+  if(bgLoading){
+    while(bgLoading) await new Promise(r => setTimeout(r, 100));
+    return bgMod;
+  }
+  bgLoading = true;
+  try {
+    dbg('loading AI model (one-time ~30mb)...');
+    bgMod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm');
+    dbg('AI model loaded ✓');
+  } catch(e){
+    bgFailed = true;
+    dbg('AI offline — uploads will keep background', true);
+  } finally {
+    bgLoading = false;
+  }
+  return bgMod;
+}
+async function removeBgIfPossible(file){
+  if(bgFailed) return null;
+  const mod = await loadBgRemoval();
+  if(!mod || !mod.removeBackground) return null;
+  try {
+    return await mod.removeBackground(file);
+  } catch(e){
+    dbg('bg removal failed: ' + e.message, true);
+    return null;
+  }
+}
+function blobToDataURL(blob){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(new Error('blob read failed'));
+    r.readAsDataURL(blob);
+  });
+}
+
+// ===== Debug logger — shows status on-screen =====
+let debugTimer = null;
+function dbg(msg, isError){
+  console.log('[TornDream]', msg);
+  const el = document.getElementById('debug');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.background = isError ? 'rgba(180,40,40,.92)' : 'rgba(0,0,0,.75)';
+  el.style.opacity = '1';
+  clearTimeout(debugTimer);
+  debugTimer = setTimeout(()=>{ el.style.opacity = '0'; }, 4500);
+}
+
+// ===== Real photo picker — users upload from their device =====
+function openPhotoPicker(){
+  try {
+    if(!document.body.classList.contains('editor-mode')) setMode('edit');
+    const input = document.getElementById('photoInput');
+    dbg('opening file picker…');
+    input.click();
+  } catch(err){
+    dbg('ERR open: ' + err.message, true);
+  }
+}
+
+// Global handler — bound via inline onchange (most reliable)
+function handlePhotoInput(event){
+  try {
+    dbg('change event fired');
+    const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
+    dbg('got ' + files.length + ' image file(s)');
+    event.target.value = '';
+    if(!files.length){
+      dbg('no images selected', true);
+      return;
+    }
+    handleFiles(files);
+  } catch(err){
+    dbg('ERR change: ' + err.message, true);
+  }
+}
+
+// ===== Drag-and-drop fallback (works even in sandboxed iframes) =====
+const phoneEl = document.querySelector('.phone');
+['dragenter','dragover'].forEach(ev => {
+  phoneEl.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    phoneEl.classList.add('dragover');
+  });
+});
+['dragleave','drop'].forEach(ev => {
+  phoneEl.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if(ev === 'dragleave' && e.target !== phoneEl) return;
+    phoneEl.classList.remove('dragover');
+  });
+});
+phoneEl.addEventListener('drop', (e) => {
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if(!files.length) return;
+  if(!document.body.classList.contains('editor-mode')) setMode('edit');
+  handleFiles(files);
+});
+
+async function handleFiles(files){
+  if(!files.length) return;
+  try {
+    for(let i = 0; i < files.length; i++){
+      const file = files[i];
+      dbg('reading ' + (i+1) + '/' + files.length + ': ' + file.name);
+
+      // Show "cutting out" modal
+      document.getElementById('modalTitle').textContent = files.length > 1
+        ? 'Cutting out (' + (i+1) + '/' + files.length + ')...'
+        : 'Cutting out your photo...';
+      document.getElementById('modalSub').textContent = bgFailed
+        ? 'preparing photo...'
+        : (bgMod ? 'AI is removing the background' : 'loading AI (first time may take ~30s)');
+      document.getElementById('modal').classList.add('show');
+
+      // Try real background removal
+      let dataUrl;
+      const cleanBlob = await removeBgIfPossible(file);
+      if(cleanBlob){
+        dataUrl = await blobToDataURL(cleanBlob);
+        dbg('clean cutout ready');
+      } else {
+        dataUrl = await readFileAsDataURL(file);
+        dbg('using original (no bg removal)');
+      }
+
+      // brief pause for visual continuity
+      await new Promise(r => setTimeout(r, 300));
+      document.getElementById('modal').classList.remove('show');
+      addUploadedCutout(dataUrl);
+      await new Promise(r => setTimeout(r, 200));
+    }
+    dbg('done — tap a photo to edit');
+  } catch(err){
+    document.getElementById('modal').classList.remove('show');
+    dbg('ERR handle: ' + err.message, true);
+  }
+}
+
+function readFileAsDataURL(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(r.result);
+    r.onerror = () => reject(new Error('FileReader failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+function addUploadedCutout(dataUrl){
+  // Place the cutout immediately with default size — don't wait for image load.
+  // Even if loading the data: URL is blocked by CSP, the paper card will still appear.
+  try {
+    const canvas = document.getElementById('canvas');
+    const h = 150 + Math.floor(Math.random()*30);
+    const w = 120 + Math.floor(Math.random()*40);
+    const filters = ['torn-edge','torn-edge-2','torn-edge-3'];
+    const f = filters[Math.floor(Math.random()*3)];
+    const x = 20 + Math.floor(Math.random()*(320 - w));
+    const y = 220 + Math.floor(Math.random()*380);
+    const rot = -8 + Math.floor(Math.random()*16);
+
+    const div = document.createElement('div');
+    div.className = 'cutout';
+    div.dataset.x = x; div.dataset.y = y; div.dataset.rot = rot; div.dataset.scale = 1;
+    div.style.width = w+'px'; div.style.height = h+'px';
+    applyTransform(div);
+    div.innerHTML =
+      '<div class="paper">' +
+        '<img class="photo" src="' + dataUrl + '" alt="your photo" ' +
+             'onload="dbg(\'image rendered\')" ' +
+             'onerror="dbg(\'IMG load failed (CSP?)\', true)"/>' +
+      '</div>';
+    canvas.appendChild(div);
+    applyTornEdge(div);
+    bindCutout(div);
+    dbg('cutout added to canvas');
+    const base = 'translate(' + x + 'px,' + y + 'px) rotate(' + rot + 'deg)';
+    div.animate(
+      [{transform: base + ' scale(.3)', opacity:0},
+       {transform: base + ' scale(1.08)', opacity:1, offset:.7},
+       {transform: base + ' scale(1)', opacity:1}],
+      {duration: 500, easing:'cubic-bezier(.34,1.56,.64,1)'}
+    );
+  } catch(err){
+    dbg('ERR addCutout: ' + err.message, true);
+  }
+}
+function addRandomCutout(){
+  if(!document.body.classList.contains('editor-mode')) setMode('edit');
+  const canvas = document.getElementById('canvas');
+  const sample = samplePool[nextIdx % samplePool.length]; nextIdx++;
+  const filters = ['torn-edge','torn-edge-2','torn-edge-3'];
+  const f = filters[Math.floor(Math.random()*3)];
+  const w = 95 + Math.floor(Math.random()*45);
+  const h = 95 + Math.floor(Math.random()*55);
+  const x = 20 + Math.floor(Math.random()*180);
+  const y = 230 + Math.floor(Math.random()*360);
+  const rot = -8 + Math.floor(Math.random()*16);
+
+  const div = document.createElement('div');
+  div.className = 'cutout';
+  div.dataset.x = x; div.dataset.y = y; div.dataset.rot = rot; div.dataset.scale = 1;
+  div.style.width = w+'px'; div.style.height = h+'px';
+  applyTransform(div);
+  div.innerHTML = `
+    <div class="paper">
+      <svg class="photo" viewBox="${sample.vb}" preserveAspectRatio="xMidYMid slice"><use href="${sample.sym}"/></svg>
+    </div>
+  `;
+  canvas.appendChild(div);
+  applyTornEdge(div);
+  bindCutout(div);
+  const base = `translate(${x}px,${y}px) rotate(${rot}deg)`;
+  div.animate(
+    [{transform: base + ' scale(.3)', opacity:0},
+     {transform: base + ' scale(1.08)', opacity:1, offset:.7},
+     {transform: base + ' scale(1)', opacity:1}],
+    {duration: 450, easing:'cubic-bezier(.34,1.56,.64,1)'}
+  );
+}
+</script>
+
+</body>
+</html>
