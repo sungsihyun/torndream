@@ -583,19 +583,6 @@
 
     <div class="canvas" id="canvas">
 
-      <!-- Decorative text -->
-      <div class="headline" style="top:38%; left:14px; font-size:42px; transform:rotate(-4deg); color:#8B5A5A; line-height:.9;">
-        DREAM<br/>BIG
-      </div>
-
-      <div class="marker" style="top:54%; right:14px; font-size:18px; transform:rotate(5deg); max-width:130px; text-align:right; line-height:1.1;">
-        I am becoming<br/>her ✨
-      </div>
-
-      <div class="handwritten" style="bottom:38%; left:18px; font-size:22px; transform:rotate(-2deg); color:#A67373;">
-        slow mornings,<br/>strong coffee
-      </div>
-
       <!-- Cutouts (using inline SVG symbols) -->
       <div class="cutout rect" data-x="20" data-y="280" data-rot="-7" style="width:130px; height:160px; left:0; top:0;">
         <div class="paper">
@@ -627,10 +614,6 @@
         <div class="paper">
           <svg class="photo" viewBox="0 0 100 80" preserveAspectRatio="xMidYMid slice"><use href="#img-mountain"/></svg>
         </div>
-      </div>
-
-      <div class="headline" style="bottom:6%; left:50%; transform:translateX(-50%) rotate(-1deg); font-size:14px; text-align:center; color:#5C4848; opacity:.85;">
-        the soft<br/>life
       </div>
 
       <div class="safe-zone top"><span class="label">Clock area</span></div>
@@ -724,15 +707,24 @@
     </div>
 
     <div class="sheet" id="sheetPaper">
-      <h3>Background paper <button class="close" onclick="closeSheet()">✕</button></h3>
-      <div class="row" id="paperRow">
-        <div class="paper-option active" data-paper="cream" onclick="setBackground('cream', this)" style="background: linear-gradient(165deg, #F8EBD3 0%, #E8CDA8 100%)"></div>
-        <div class="paper-option" data-paper="pink" onclick="setBackground('pink', this)" style="background: linear-gradient(165deg, #FFE4E6 0%, #E8B4B8 100%)"></div>
-        <div class="paper-option" data-paper="sage" onclick="setBackground('sage', this)" style="background: linear-gradient(165deg, #E8EFE0 0%, #B8C5A6 100%)"></div>
-        <div class="paper-option" data-paper="sky" onclick="setBackground('sky', this)" style="background: linear-gradient(165deg, #E8EEF2 0%, #C9D6DF 100%)"></div>
-        <div class="paper-option" data-paper="dusk" onclick="setBackground('dusk', this)" style="background: linear-gradient(165deg, #5C4848 0%, #2A1F1A 100%)"></div>
-        <div class="paper-option" data-paper="kraft" onclick="setBackground('kraft', this)" style="background: linear-gradient(165deg, #C8A878 0%, #8B6F4E 100%)"></div>
+      <h3>Background <button class="close" onclick="closeSheet()">✕</button></h3>
+      <div class="section">
+        <div style="font-size:11px; color:var(--sepia); opacity:.7; text-transform:uppercase; letter-spacing:.5px;">Paper presets</div>
+        <div class="row" id="paperRow">
+          <div class="paper-option active" data-paper="cream" onclick="setBackground('cream', this)" style="background: linear-gradient(165deg, #F8EBD3 0%, #E8CDA8 100%)"></div>
+          <div class="paper-option" data-paper="pink" onclick="setBackground('pink', this)" style="background: linear-gradient(165deg, #FFE4E6 0%, #E8B4B8 100%)"></div>
+          <div class="paper-option" data-paper="sage" onclick="setBackground('sage', this)" style="background: linear-gradient(165deg, #E8EFE0 0%, #B8C5A6 100%)"></div>
+          <div class="paper-option" data-paper="sky" onclick="setBackground('sky', this)" style="background: linear-gradient(165deg, #E8EEF2 0%, #C9D6DF 100%)"></div>
+          <div class="paper-option" data-paper="dusk" onclick="setBackground('dusk', this)" style="background: linear-gradient(165deg, #5C4848 0%, #2A1F1A 100%)"></div>
+          <div class="paper-option" data-paper="kraft" onclick="setBackground('kraft', this)" style="background: linear-gradient(165deg, #C8A878 0%, #8B6F4E 100%)"></div>
+        </div>
       </div>
+      <div class="section" style="margin-top:14px;">
+        <div style="font-size:11px; color:var(--sepia); opacity:.7; text-transform:uppercase; letter-spacing:.5px;">Or use your photo</div>
+        <button class="add-btn" onclick="openBgPicker()" style="margin-top:6px;">📷 Pick a photo as background</button>
+        <button class="add-btn" onclick="resetBackground()" style="margin-top:6px; background: rgba(92,72,72,.15); color: var(--sepia);">↺ Reset to paper</button>
+      </div>
+      <input type="file" id="bgInput" accept="image/*" style="display:none" onchange="handleBgUpload(event)"/>
     </div>
 
     <!-- File picker — triggered by Photo button. Inline onchange = most reliable. -->
@@ -1360,6 +1352,34 @@ function setBackground(name, el){
   document.querySelectorAll('#paperRow .paper-option').forEach(o => o.classList.remove('active'));
   if(el) el.classList.add('active');
   closeSheet();
+}
+function openBgPicker(){
+  document.getElementById('bgInput').click();
+}
+function handleBgUpload(event){
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if(!file || !file.type.startsWith('image/')){
+    dbg('not an image', true);
+    return;
+  }
+  const r = new FileReader();
+  r.onload = (e) => {
+    const url = e.target.result;
+    const canvas = document.getElementById('canvas');
+    // User photo as background, with a subtle vintage grain on top.
+    canvas.style.background =
+      "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4   0 0 0 0 0.3   0 0 0 0 0.2   0 0 0 0.1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")," +
+      " url('" + url + "') center/cover no-repeat";
+    document.querySelectorAll('#paperRow .paper-option').forEach(o => o.classList.remove('active'));
+    closeSheet();
+    dbg('background photo set ✓');
+  };
+  r.onerror = () => dbg('couldn\'t read file', true);
+  r.readAsDataURL(file);
+}
+function resetBackground(){
+  setBackground('cream', document.querySelector('#paperRow .paper-option[data-paper="cream"]'));
 }
 
 function addRandomCutout(){
